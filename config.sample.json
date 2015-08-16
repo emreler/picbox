@@ -1,0 +1,12 @@
+{
+  "instagram": {
+    "client_id": "",
+    "client_secret": "",
+    "redirect_uri": "http://"
+  },
+  "dropbox": {
+    "client_id": "",
+    "client_secret": "",
+    "redirect_uri": "http://"
+  }
+}
