@@ -1,6 +1,6 @@
 var express = require('express');
-var Instagram = require('../lib/sdk/instagram');
-var Dropbox = require('../lib/sdk/dropbox');
+var Instagram = require('../app/sdk/instagram');
+var Dropbox = require('../app/sdk/dropbox');
 var config = require('../config');
 
 var router = express.Router();
