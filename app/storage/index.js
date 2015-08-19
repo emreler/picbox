@@ -42,21 +42,38 @@ Storage.prototype.createUser = function (user, cb) {
 };
 
 Storage.prototype.getUser = function (email, password, cb) {
-  this.connection.query('SELECT * FROM users WHERE ?', {email: email}, function (err, result) {
-    if (err) throw err;
-
-    if (result.length === 0) {
-      cb({not_exists: true});
-    }
-
-    bcrypt.compare(password, result[0].password, function(err, match) {
+  if (arguments.length == 2 && typeof arguments[0] == 'number' && typeof arguments[1] == 'function') {
+    // called with `ìd` parameter for deserialization
+    var id = email;
+    cb = password;
+    this.connection.query('SELECT * FROM users WHERE ?', {id: id}, function (err, result) {
       if (err) throw err;
 
-      if (match) {
-        cb(null, result[0]);
+      if (result.length != 1) {
+        return cb({not_exists: true});
       }
+
+      return cb(null, result[0]);
     });
-  });
+  } else {
+    this.connection.query('SELECT * FROM users WHERE ?', {email: email}, function (err, result) {
+      if (err) throw err;
+
+      if (result.length === 0) {
+        return cb({not_exists: true});
+      }
+
+      bcrypt.compare(password, result[0].password, function(err, match) {
+        if (err) throw err;
+
+        if (match) {
+          cb(null, result[0]);
+        } else {
+          cb({incorrect_password: true});
+        }
+      });
+    });
+  }
 };
 
 Storage.prototype.saveInstagramInfo = function (email, igm, cb) {
