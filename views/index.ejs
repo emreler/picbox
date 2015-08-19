@@ -1,6 +1,7 @@
 <!doctype html>
 
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
 
@@ -22,21 +23,40 @@
 
 <body>
   <div class="container">
-      <h1>Welcome to PicBox!</h1>
-      <h4>PicBox helps you to save pictures that you liked on Instagram to your Dropbox.</h4>
-      <br>
-      <div style="width: 200px; float: left; margin-right: 15px;">
-        <a class="btn btn-block btn-sm btn-social btn-instagram" href="https://api.instagram.com/oauth/authorize/?client_id=d636d0531aa54d4e845a8025f84ea442&redirect_uri=http://localhost:3000/authenticate/instagram&response_type=code" target="_blank">
-            <i class="fa fa-instagram"></i> Sign in with Instagram
-        </a>
-      </div>
-      <div style="width: 200px; float: left;">
-        <a class="btn btn-block btn-sm btn-social btn-dropbox" href="https://www.dropbox.com/1/oauth2/authorize?response_type=code&client_id=uh671azi4ltpf4n&redirect_uri=http://localhost:3000/authenticate/dropbox" target="_blank">
-            <i class="fa fa-dropbox"></i> Sign in with Dropbox
-        </a>
-      </div>
+    <h1>Welcome to PicBox!</h1>
+    <h4>PicBox helps you to save pictures that you liked on Instagram to your Dropbox.</h4>
+    <br>
+    <div class="col-md-6">
+      <form method="post" action="/signup">
+        <div class="form-group">
+          <label for="exampleInputEmail1">Email address</label>
+          <input type="email" class="form-control" id="email" name="email" placeholder="Email">
+        </div>
+        <div class="form-group">
+          <label for="exampleInputPassword1">Password</label>
+          <input type="password" class="form-control" id="password" name="password" placeholder="Password">
+        </div>
+        <button type="submit" class="btn btn-primary">Sign Up</button>
+      </form>
+    </div>
+
+    <div class="col-md-6">
+      <form method="post" action="/signup">
+        <div class="form-group">
+          <label for="exampleInputEmail1">Email address</label>
+          <input type="email" class="form-control" id="email" name="email" placeholder="Email">
+        </div>
+        <div class="form-group">
+          <label for="exampleInputPassword1">Password</label>
+          <input type="password" class="form-control" id="password" name="password" placeholder="Password">
+        </div>
+        <button type="submit" class="btn btn-default">Sign In</button>
+      </form>
+    </div>
+
   </div>
   <!-- Latest compiled and minified JavaScript -->
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 </body>
+
 </html>
