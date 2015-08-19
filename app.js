@@ -4,9 +4,10 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var session = require('express-session');
 
 var routes = require('./routes/index');
-var users = require('./routes/users');
+var accounts = require('./routes/accounts');
 var authenticate = require('./routes/authenticate');
 
 var app = express();
@@ -20,11 +21,14 @@ app.set('view engine', 'ejs');
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(session({secret: 'myfoobarsecret', resave: false, saveUninitialized: false}));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+require('./app/authentication')(app);
+
 app.use('/', routes);
-app.use('/users', users);
+app.use('/', accounts);
 app.use('/authenticate', authenticate);
 
 // catch 404 and forward to error handler
