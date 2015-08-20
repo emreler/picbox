@@ -8,5 +8,11 @@
     "client_id": "",
     "client_secret": "",
     "redirect_uri": "http://"
+  },
+  "mysql": {
+    "host": "",
+    "user": "",
+    "password": "",
+    "database": ""
   }
 }
