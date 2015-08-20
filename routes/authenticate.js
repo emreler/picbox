@@ -1,4 +1,6 @@
 var express = require('express');
+var passport = require('passport');
+
 var Instagram = require('../app/sdk/instagram');
 var Dropbox = require('../app/sdk/dropbox');
 var Storage = require('../app/storage');
@@ -17,15 +19,31 @@ var ensureAuthenticated = function (req, res, next) {
   }
 };
 
-router.get('/instagram', ensureAuthenticated, function (req, res, next) {
+router.get('/login', function (req, res, next) {
+  // todo: show login page
+  res.end();
+});
+
+router.post('/login', passport.authenticate('local', {successRedirect: '/home', failureRedirect: '/'}));
+
+router.get('/signup', function (req, res, next) {
+  // todo: show signup page
+  res.end();
+});
+
+router.post('/signup', function (req, res, next) {
+  res.end();
+});
+
+router.get('/authenticate/instagram', ensureAuthenticated, function (req, res, next) {
   res.redirect(instagram.getAuthUrl());
 });
 
-router.get('/dropbox', ensureAuthenticated, function (req, res, next) {
+router.get('/authenticate/dropbox', ensureAuthenticated, function (req, res, next) {
   res.redirect(dropbox.getAuthUrl());
 });
 
-router.get('/instagram/callback', ensureAuthenticated, function(req, res, next) {
+router.get('/authenticate/instagram/callback', ensureAuthenticated, function(req, res, next) {
   if (req.query.hasOwnProperty('code')) {
     instagram.getAccessToken(req.query.code, function (err, accessToken, user) {
       if (err || !accessToken || !user) {
@@ -40,7 +58,7 @@ router.get('/instagram/callback', ensureAuthenticated, function(req, res, next) 
   }
 });
 
-router.get('/dropbox/callback', ensureAuthenticated, function(req, res, next) {
+router.get('/authenticate/dropbox/callback', ensureAuthenticated, function(req, res, next) {
   if (req.query.hasOwnProperty('code')) {
     dropbox.getAccessToken(req.query.code, function (err, accessToken, userID) {
       if (err) {
