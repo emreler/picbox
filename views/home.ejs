@@ -1,0 +1,42 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>Welcome to PicBox</title>
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+
+  <!-- Optional theme -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+
+  <link rel="stylesheet" href="/stylesheets/bootstrap-social.css">
+
+</head>
+
+<body>
+  <div class="container">
+      <h1>Welcome to PicBox!</h1>
+      <h4>PicBox helps you to save pictures that you liked on Instagram to your Dropbox.</h4>
+      <br>
+      <div style="width: 200px; float: left; margin-right: 15px;">
+        <a class="btn btn-block btn-sm btn-social btn-instagram" href="https://api.instagram.com/oauth/authorize/?client_id=d636d0531aa54d4e845a8025f84ea442&redirect_uri=http://localhost:3000/authenticate/instagram&response_type=code" target="_blank">
+            <i class="fa fa-instagram"></i> Sign in with Instagram
+        </a>
+      </div>
+      <div style="width: 200px; float: left;">
+        <a class="btn btn-block btn-sm btn-social btn-dropbox" href="https://www.dropbox.com/1/oauth2/authorize?response_type=code&client_id=uh671azi4ltpf4n&redirect_uri=http://localhost:3000/authenticate/dropbox" target="_blank">
+            <i class="fa fa-dropbox"></i> Sign in with Dropbox
+        </a>
+      </div>
+  </div>
+  <!-- Latest compiled and minified JavaScript -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+</body>
+</html>
