@@ -7,7 +7,15 @@ var config = require('../config');
 var router = express.Router();
 var storage = new Storage(config.mysql);
 
-router.get('/instagram', function(req, res, next) {
+var ensureAuthenticated = function (req, res, next) {
+  if (req.isAuthenticated()) {
+    return next();
+  } else {
+    res.redirect('/');
+  }
+};
+
+router.get('/instagram', ensureAuthenticated, function(req, res, next) {
   if (req.query.hasOwnProperty('code')) {
     // get instagram access token using req.query.code
     var instagram = new Instagram(config.instagram);
@@ -24,7 +32,7 @@ router.get('/instagram', function(req, res, next) {
   }
 });
 
-router.get('/dropbox', function(req, res, next) {
+router.get('/dropbox', ensureAuthenticated, function(req, res, next) {
   if (req.query.hasOwnProperty('code')) {
     // get dropbox access token using req.query.code
     var dropbox = new Dropbox(config.dropbox);
