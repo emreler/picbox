@@ -60,7 +60,7 @@ Instagram.prototype.getAccessToken = function (code, cb) {
       _this.accessToken = response.access_token;
       _this.userID = response.user.id;
 
-      cb(null, response.access_token);
+      cb(null, response.access_token, response.user);
     });
   });
 

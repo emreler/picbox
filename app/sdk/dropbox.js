@@ -60,7 +60,7 @@ Dropbox.prototype.getAccessToken = function (code, cb) {
       _this.accessToken = response.access_token;
       _this.userID = response.uid;
 
-      cb(null);
+      cb(null, response.access_token, response.uid);
     });
   });
 
