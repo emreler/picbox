@@ -13,10 +13,6 @@ var Storage = function (config) {
     password: this.password,
     database: this.database
   });
-
-  this.connection.connect(function (err) {
-    if (err) throw err;
-  });
 };
 
 Storage.prototype.terminate = function () {
