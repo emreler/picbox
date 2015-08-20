@@ -6,6 +6,8 @@ var config = require('../config');
 
 var router = express.Router();
 var storage = new Storage(config.mysql);
+var instagram = new Instagram(config.instagram);
+var dropbox = new Dropbox(config.dropbox);
 
 var ensureAuthenticated = function (req, res, next) {
   if (req.isAuthenticated()) {
@@ -15,16 +17,22 @@ var ensureAuthenticated = function (req, res, next) {
   }
 };
 
-router.get('/instagram', ensureAuthenticated, function(req, res, next) {
+router.get('/instagram', ensureAuthenticated, function (req, res, next) {
+  res.redirect(instagram.getAuthUrl());
+});
+
+router.get('/dropbox', ensureAuthenticated, function (req, res, next) {
+  res.redirect(dropbox.getAuthUrl());
+});
+
+router.get('/instagram/callback', ensureAuthenticated, function(req, res, next) {
   if (req.query.hasOwnProperty('code')) {
-    // get instagram access token using req.query.code
-    var instagram = new Instagram(config.instagram);
     instagram.getAccessToken(req.query.code, function (err, accessToken, user) {
       if (err || !accessToken || !user) {
         return res.send(err.message);
       }
       storage.saveInstagramInfo(req.user.email, {accessToken: accessToken, userID: user.id}, function (updated) {
-        return res.send('saved');
+        return res.redirect('/home?auth=instagram');
       });
     });
   } else {
@@ -32,17 +40,15 @@ router.get('/instagram', ensureAuthenticated, function(req, res, next) {
   }
 });
 
-router.get('/dropbox', ensureAuthenticated, function(req, res, next) {
+router.get('/dropbox/callback', ensureAuthenticated, function(req, res, next) {
   if (req.query.hasOwnProperty('code')) {
-    // get dropbox access token using req.query.code
-    var dropbox = new Dropbox(config.dropbox);
     dropbox.getAccessToken(req.query.code, function (err, accessToken, userID) {
       if (err) {
         res.send(err.message);
         return;
       }
       storage.saveDropboxInfo(req.user.email, {accessToken: accessToken, userID: userID}, function (updated) {
-        return res.send('saved');
+        return res.redirect('/home?auth=dropbox');
       });
     });
   } else {
