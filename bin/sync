@@ -1,0 +1,41 @@
+#!/usr/bin/env node
+
+// todo: get config file path from argv
+var config = require('../config');
+var Storage = require('../app/storage');
+var Instagram = require('../app/sdk/instagram');
+var Dropbox = require('../app/sdk/dropbox');
+var moment = require('moment');
+
+var storage = new Storage(config.mysql);
+var instagram = new Instagram(config.instagram);
+var dropbox = new Dropbox(config.dropbox);
+
+var fileName;
+
+storage.getUsers(function (err, users) {
+  if (err) {
+    throw err;
+  }
+  users.forEach(function (user) {
+    if (user.instagram_token) {
+      instagram.getLikes(user.instagram_token, function (err, likes) {
+        likes.forEach(function (like) {
+          // like.caption can be null
+          fileName = like.user.username + ' ' + moment.unix(like.created_time).format('DD/MM/YYYY HH-mm') + '.jpg';
+          dropbox.saveUrl({
+            retryLimit: 5,
+            accessToken: user.dropbox_token,
+            url: like.images.standard_resolution.url,
+            path: fileName
+          }, function (err, jobID) {
+            console.log(err, jobID);
+          });
+          // console.log(like.images.standard_resolution.url, like.user.username, like.id);
+        });
+      });
+    }
+  });
+});
+
+storage.terminate();
