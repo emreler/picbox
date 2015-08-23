@@ -5,10 +5,57 @@ var Instagram = function (config) {
   this.clientID = config.client_id;
   this.clientSecret = config.client_secret;
   this.redirectUri = config.redirect_uri;
+  this.apiHost = 'api.instagram.com';
 };
 
 Instagram.prototype.getAuthUrl = function () {
   return 'https://api.instagram.com/oauth/authorize/?client_id=' + this.clientID + '&redirect_uri=' + this.redirectUri + '&response_type=code';
+};
+
+Instagram.prototype.getLikes = function (accessToken, cb) {
+  var queryParams = querystring.stringify({
+    'access_token': accessToken,
+    count: 20
+  });
+
+  var options = {
+    host: this.apiHost,
+    path: '/v1/users/self/media/liked?'+queryParams,
+    // qs: queryParams
+  };
+
+  var req = https.request(options, function (res) {
+
+    var responseStr = '';
+    res.setEncoding('utf8');
+
+    res.on('data', function (chunk) {
+      responseStr += chunk;
+    });
+
+    res.on('end', function () {
+      /*
+      Sample response:
+      {"pagination":{"next_url":"https:\/\/api.instagram.com\/v1\/users\/self\/media\/liked?access_token=foo\u0026count=1\u0026max_like_id=1057321178928673247","next_max_like_id":"1057321178928673247"},"meta":{"code":200},"data":[{"attribution":null,"tags":["3door","classic"],"type":"image","location":null,"comments":{},"filter":"Normal","created_time":"1440262528","link":"https:\/\/instagram.com\/p\/6sXAKjinHf\/","likes":{},"images":{"low_resolution":{"url":"https:\/\/...","width":320,"height":320},"thumbnail":{"url":"https:\/\/...","width":150,"height":150},"standard_resolution":{"url":"https:\/\/...","width":640,"height":640}},"users_in_photo":[],"caption":{"created_time":"1440262528","text":"some text","from":{"username":"american_automobiles","profile_picture":"https:\/\/...","id":"1042330667","full_name":"name"},"id":"1057321182317671120"},"user_has_liked":true,"id":"1057321178928673247_1042330667","user":{"username":"american_automobiles","profile_picture":"https:\/\/...","id":"1042330667","full_name":""}}]}
+      */
+      var response = {};
+      try {
+        response = JSON.parse(responseStr);
+      } catch (e) {
+        // todo: show error
+        return cb(e);
+      }
+
+      if (res.statusCode != 200) {
+        if (response.hasOwnProperty('meta')) {
+          return cb(response.meta.error_message);
+        }
+      }
+      return cb(null, response.data);
+    });
+  });
+
+  req.end();
 };
 
 Instagram.prototype.getAccessToken = function (code, cb) {
@@ -22,7 +69,7 @@ Instagram.prototype.getAccessToken = function (code, cb) {
   });
 
   var options = {
-    host: 'api.instagram.com',
+    host: this.apiHost,
     path: '/oauth/access_token',
     method: 'POST',
     headers: {
@@ -32,7 +79,7 @@ Instagram.prototype.getAccessToken = function (code, cb) {
   };
 
   var _this = this;
-  var req = https.request(options, function(res) {
+  var req = https.request(options, function (res) {
     var responseStr = '';
     res.setEncoding('utf8');
 
