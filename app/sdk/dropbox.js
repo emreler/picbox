@@ -5,6 +5,7 @@ var Dropbox = function (config) {
   this.clientID = config.client_id;
   this.clientSecret = config.client_secret;
   this.redirectUri = config.redirect_uri;
+  this.maxRetry = 5;
 };
 
 Dropbox.prototype.getAuthUrl = function () {
@@ -67,6 +68,66 @@ Dropbox.prototype.getAccessToken = function (code, cb) {
   req.write(postData);
   req.end();
 
+};
+
+Dropbox.prototype.saveUrl = function (params, cb) {
+
+  if (!params.hasOwnProperty('retry')) {
+    params.retry = 0;
+  }
+
+  _this = this;
+  var req = https.request({
+    host: 'api.dropboxapi.com',
+    path: '/1/save_url/auto/' + encodeURIComponent(params.path) + '?' + querystring.stringify({url: params.url}),
+    method: 'POST',
+    headers: {
+      Authorization: 'Bearer '+params.accessToken
+    }
+  }, function (res) {
+    var responseStr = '';
+    res.setEncoding('utf8');
+
+    res.on('data', function (chunk) {
+      responseStr += chunk;
+    });
+
+    res.on('end', function () {
+      /*
+      Sample response:
+      {"status": "PENDING", "job": "1mYs8ReIEScAAAAAAAAmIQ"}
+      */
+      var response = {};
+      try {
+        response = JSON.parse(responseStr);
+      } catch (e) {
+        // todo: show error
+        return cb(e);
+      }
+
+      if (response.hasOwnProperty('error')) {
+        // See: https://www.dropboxforum.com/hc/en-us/community/posts/204555365-Failed-to-grab-locks
+        if (response.error.indexOf('Failed to grab locks') >= 0) {
+          if (++params.retry === this.maxRetry) {
+            return cb(new Error('Retries failed'));
+          }
+          return setTimeout(function () {
+            _this.saveUrl(params, cb);
+          }, 300 * params.retry);
+        } else {
+          return cb(new Error(response.error));
+        }
+      }
+
+      if (params.retry > 0) {
+        console.log('completed after '+ params.retry + ' retries');
+      }
+
+      cb(null, response);
+    });
+  });
+
+  req.end();
 };
 
 module.exports = Dropbox;
