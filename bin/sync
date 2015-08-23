@@ -22,7 +22,7 @@ storage.getUsers(function (err, users) {
       instagram.getLikes(user.instagram_token, function (err, likes) {
         likes.forEach(function (like) {
           // like.caption can be null
-          fileName = like.user.username + ' ' + moment.unix(like.created_time).format('DD/MM/YYYY HH-mm') + '.jpg';
+          fileName = like.user.username + ' ' + moment.unix(like.created_time).format('DD-MM-YYYY HH.mm') + '.jpg';
           dropbox.saveUrl({
             retryLimit: 5,
             accessToken: user.dropbox_token,
