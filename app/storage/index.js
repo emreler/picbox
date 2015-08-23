@@ -72,6 +72,20 @@ Storage.prototype.getUser = function (email, password, cb) {
   }
 };
 
+Storage.prototype.getUsers = function (limit, cb) {
+  if (!cb && typeof limit == 'function') {
+    cb = limit;
+    limit = 100;
+  }
+  this.connection.query('SELECT email, instagram_token, dropbox_token FROM users LIMIT ?', [limit], function (err, results) {
+    if (err) {
+      return cb(err);
+    }
+    
+    cb(null, results);
+  });
+};
+
 Storage.prototype.saveInstagramInfo = function (email, igm, cb) {
   this.connection.query('UPDATE users SET ? WHERE ?',
   [
