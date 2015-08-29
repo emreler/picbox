@@ -1,5 +1,6 @@
 var querystring = require('querystring');
 var https = require('https');
+var request = require('request');
 
 var Dropbox = function (config) {
   this.clientID = config.client_id;
@@ -68,6 +69,26 @@ Dropbox.prototype.getAccessToken = function (code, cb) {
   req.write(postData);
   req.end();
 
+};
+
+Dropbox.prototype.isAppInstalled = function (accessToken, cb) {
+  var options = {
+    url: 'https://api.dropboxapi.com/1/account/info',
+    method: 'GET',
+    json: true,
+    headers: {
+      Authorization: 'Bearer ' + accessToken
+    }
+  };
+
+  request(options, function (err, response, body) {
+    if (err) throw err;
+    if (response.statusCode == 200 && body.hasOwnProperty('uid')) {
+      return cb(null);
+    } else if (body.hasOwnProperty('error')) {
+      return cb(body.error);
+    }
+  });
 };
 
 Dropbox.prototype.saveUrl = function (params, cb) {
