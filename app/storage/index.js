@@ -1,22 +1,29 @@
 var mysql = require('mysql');
 var bcrypt = require('bcrypt');
+var redis = require('redis');
+var debug = require('debug')('storage');
+var Q = require('q');
 
-var Storage = function (config) {
-  this.host = config.host;
-  this.user = config.user;
-  this.password = config.password;
-  this.database = config.database;
+var Storage = function (mysqlConfig, redisConfig) {
+  this.host = mysqlConfig.host;
+  this.user = mysqlConfig.user;
+  this.password = mysqlConfig.password;
+  this.database = mysqlConfig.database;
 
+  // connection is not established here. it is established implicitly by invoking a query
   this.connection = mysql.createConnection({
     host: this.host,
     user: this.user,
     password: this.password,
     database: this.database
   });
+
+  this.redisClient = redis.createClient(redisConfig.port, redisConfig.host);
 };
 
 Storage.prototype.terminate = function () {
   this.connection.end();
+  this.redisClient.quit();
 };
 
 Storage.prototype.createUser = function (user, cb) {
@@ -77,11 +84,11 @@ Storage.prototype.getUsers = function (limit, cb) {
     cb = limit;
     limit = 100;
   }
-  this.connection.query('SELECT email, instagram_token, dropbox_token FROM users LIMIT ?', [limit], function (err, results) {
+  this.connection.query('SELECT id, email, instagram_id, instagram_token, dropbox_id, dropbox_token FROM users LIMIT ?', [limit], function (err, results) {
     if (err) {
       return cb(err);
     }
-    
+
     cb(null, results);
   });
 };
@@ -108,6 +115,27 @@ Storage.prototype.saveDropboxInfo = function (email, dbx, cb) {
     if (err) throw err;
     cb(result.changedRows);
   });
+};
+
+Storage.prototype.isMediaSaved = function (userID, mediaID, cb) {
+  var savedLikesKey = 'picbox.' + userID + '.saved';
+  this.redisClient.sismember(savedLikesKey, mediaID, function (err, reply) {
+    if (err) {
+      return cb(err);
+    }
+    if (reply === 1) {
+      return cb(null, true);
+    } else if(reply === 0) {
+      return cb(null, false);
+    } else {
+      return cb(new Error('Unknown response: ' + reply));
+    }
+  });
+};
+
+Storage.prototype.saveLikedMedia = function (userID, mediaID) {
+  var savedLikesKey = 'picbox.' + userID + '.saved';
+  this.redisClient.sadd(savedLikesKey, mediaID);
 };
 
 module.exports = Storage;
