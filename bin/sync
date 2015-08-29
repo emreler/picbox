@@ -6,8 +6,9 @@ var Storage = require('../app/storage');
 var Instagram = require('../app/sdk/instagram');
 var Dropbox = require('../app/sdk/dropbox');
 var moment = require('moment');
+var debug = require('debug')('sync');
 
-var storage = new Storage(config.mysql);
+var storage = new Storage(config.mysql, config.redis);
 var instagram = new Instagram(config.instagram);
 var dropbox = new Dropbox(config.dropbox);
 
@@ -18,24 +19,48 @@ storage.getUsers(function (err, users) {
     throw err;
   }
   users.forEach(function (user) {
-    if (user.instagram_token) {
-      instagram.getLikes(user.instagram_token, function (err, likes) {
-        likes.forEach(function (like) {
-          // like.caption can be null
-          fileName = like.user.username + ' ' + moment.unix(like.created_time).format('DD-MM-YYYY HH.mm') + '.jpg';
-          dropbox.saveUrl({
-            retryLimit: 5,
-            accessToken: user.dropbox_token,
-            url: like.images.standard_resolution.url,
-            path: fileName
-          }, function (err, jobID) {
-            console.log(err, jobID);
+    if (user.instagram_token && user.dropbox_token) {
+      debug(user.email + ' starting');
+      dropbox.isAppInstalled(user.dropbox_token, function (err) {
+        debug('Dropbox installed');
+        if (err) {
+          console.log(err);
+          return;
+        }
+        instagram.getLikes(user.instagram_token, function (err, likes) {
+          debug('Got '+likes.length+' likes');
+          likes.forEach(function (like) {
+            // like.caption can be null
+            storage.isMediaSaved(user.id, like.id, function (err, saved) {
+              if (err) throw err;
+              if (saved) {
+                debug(like.id+' is saved');
+                return;
+              }
+              debug(like.id+' is not saved');
+              fileName = like.user.username + ' ' + moment.unix(like.created_time).format('DD-MM-YYYY HH.mm') + '.jpg';
+              dropbox.saveUrl({
+                retryLimit: 5,
+                accessToken: user.dropbox_token,
+                url: like.images.standard_resolution.url,
+                path: fileName
+              }, function (err, jobID) {
+                if (err) {
+                  if (err.hasOwnProperty('message') && err.message.indexOf('User has removed their App folder.') >= 0) {
+                    // User must reauthorize app with Dropbox
+                  }
+                  return;
+                }
+                storage.saveLikedMedia(user.id, like.id);
+                console.log(err, jobID);
+              });
+            });
+            // console.log(like.images.standard_resolution.url, like.user.username, like.id);
           });
-          // console.log(like.images.standard_resolution.url, like.user.username, like.id);
         });
       });
     }
   });
 });
 
-storage.terminate();
+// storage.terminate();
