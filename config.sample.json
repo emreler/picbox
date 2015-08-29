@@ -14,5 +14,9 @@
     "user": "",
     "password": "",
     "database": ""
+  },
+  "redis": {
+    "host": "",
+    "port": 
   }
 }
