@@ -1,5 +1,7 @@
 var querystring = require('querystring');
 var https = require('https');
+var Q = require('q');
+var debug = require('debug')('instagram');
 
 var Instagram = function (config) {
   this.clientID = config.client_id;
@@ -47,7 +49,7 @@ Instagram.prototype.getLikes = function (accessToken, cb) {
       }
 
       if (res.statusCode != 200) {
-        if (response.hasOwnProperty('meta')) {
+        if (response.hasOwnProperty('meta') && response.meta.hasOwnProperty('error_message')) {
           return cb(response.meta.error_message);
         }
       }
@@ -56,6 +58,18 @@ Instagram.prototype.getLikes = function (accessToken, cb) {
   });
 
   req.end();
+};
+
+Instagram.prototype.getLikesP = function (accessToken) {
+  var deferred = Q.defer();
+  this.getLikes(accessToken, function (err, likes) {
+    if (err) {
+      deferred.reject(err);
+    } else {
+      deferred.resolve(likes);
+    }
+  });
+  return deferred.promise;
 };
 
 Instagram.prototype.getAccessToken = function (code, cb) {

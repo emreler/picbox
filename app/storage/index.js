@@ -93,6 +93,19 @@ Storage.prototype.getUsers = function (limit, cb) {
   });
 };
 
+Storage.prototype.getUsersP = function (limit) {
+  limit = limit || 100;
+  var deferred = Q.defer();
+  this.connection.query('SELECT id, email, instagram_id, instagram_token, dropbox_id, dropbox_token FROM users LIMIT ?', [limit], function (err, results) {
+    if (err) {
+      deferred.reject(err);
+    } else {
+      deferred.resolve(results);
+    }
+  });
+  return deferred.promise;
+};
+
 Storage.prototype.saveInstagramInfo = function (email, igm, cb) {
   this.connection.query('UPDATE users SET ? WHERE ?',
   [
@@ -117,6 +130,17 @@ Storage.prototype.saveDropboxInfo = function (email, dbx, cb) {
   });
 };
 
+Storage.prototype.checkMediaSavedP = function (userID, mediaID) {
+  var deferred = Q.defer();
+
+  this.isMediaSaved(userID, mediaID, function (err, saved) {
+    if (err) throw err;
+    deferred.resolve(saved);
+  });
+
+  return deferred.promise;
+};
+
 Storage.prototype.isMediaSaved = function (userID, mediaID, cb) {
   var savedLikesKey = 'picbox.' + userID + '.saved';
   this.redisClient.sismember(savedLikesKey, mediaID, function (err, reply) {
@@ -135,6 +159,8 @@ Storage.prototype.isMediaSaved = function (userID, mediaID, cb) {
 
 Storage.prototype.saveLikedMedia = function (userID, mediaID) {
   var savedLikesKey = 'picbox.' + userID + '.saved';
+
+  // todo: error handling
   this.redisClient.sadd(savedLikesKey, mediaID);
 };
 
