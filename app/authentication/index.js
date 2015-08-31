@@ -14,7 +14,7 @@ module.exports = function (app) {
       passwordField: 'password'
     },
     function(email, password, done) {
-      var storage = new Storage(config.mysql);
+      var storage = new Storage(config.mysql, config.redis);
       storage.getUser(email, password, function (err, user) {
         if (err) {
           return done(null, false);
@@ -30,7 +30,7 @@ module.exports = function (app) {
   });
 
   passport.deserializeUser(function(id, done) {
-    var storage = new Storage(config.mysql);
+    var storage = new Storage(config.mysql, config.redis);
     storage.getUser(id, function (err, user) {
       if (err) return done(err);
       return done(null, user);

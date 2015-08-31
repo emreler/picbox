@@ -25,14 +25,36 @@
       <h1>Welcome to PicBox!</h1>
       <h4>PicBox helps you to save pictures that you liked on Instagram to your Dropbox.</h4>
       <br>
+      <% if (!linkedIgm) { %>
       <div style="width: 200px; float: left; margin-right: 15px;">
         <a class="btn btn-block btn-sm btn-social btn-instagram" href="/authenticate/instagram" target="_self">
             <i class="fa fa-instagram"></i> Sign in with Instagram
         </a>
       </div>
+      <% } else { %>
+      <div style="width: 200px; float: left; margin-right: 15px;">
+        <a class="btn btn-block btn-sm btn-social btn-instagram" href="/unlink/instagram" target="_self">
+            <i class="fa fa-instagram"></i> Unlink Instagram
+        </a>
+      </div>
+      <% } %>
+
+      <% if (!linkedDbx) { %>
       <div style="width: 200px; float: left;">
         <a class="btn btn-block btn-sm btn-social btn-dropbox" href="/authenticate/dropbox" target="_self">
             <i class="fa fa-dropbox"></i> Sign in with Dropbox
+        </a>
+      </div>
+      <% } else { %>
+      <div style="width: 200px; float: left;">
+        <a class="btn btn-block btn-sm btn-social btn-dropbox" href="/unlink/dropbox" target="_self">
+            <i class="fa fa-dropbox"></i> Unlink Dropbox
+        </a>
+      </div>
+      <% } %>
+      <div style="width: 200px; margin-top: 60px;">
+        <a class="btn btn-default btn-sm" href="/logout" target="_self">
+            Sign Out (<%= email %>)
         </a>
       </div>
   </div>

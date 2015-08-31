@@ -10,7 +10,15 @@ var ensureAuthenticated = function (req, res, next) {
 };
 
 router.get('/home', ensureAuthenticated, function (req, res, next) {
-  res.render('home');
+
+  var linkedIgm = !!(req.user.instagram_id && req.user.instagram_token);
+  var linkedDbx = !!(req.user.dropbox_id && req.user.dropbox_token);
+
+  res.render('home', {
+    email: req.user.email,
+    linkedIgm: linkedIgm,
+    linkedDbx: linkedDbx
+  });
 });
 
 module.exports = router;

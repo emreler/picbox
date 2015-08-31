@@ -26,22 +26,26 @@ Storage.prototype.terminate = function () {
   this.redisClient.quit();
 };
 
-Storage.prototype.createUser = function (user, cb) {
+Storage.prototype.createUser = function (email, password) {
+  var deferred = Q.defer();
   var _this = this;
   bcrypt.genSalt(10, function(err, salt) {
-    bcrypt.hash(user.password, salt, function(err, hash) {
-      _this.connection.query('INSERT INTO users SET ?', {email: user.email, password: hash}, function (err, result) {
+    bcrypt.hash(password, salt, function(err, hash) {
+      _this.connection.query('INSERT INTO users SET ?', {email: email, password: hash}, function (err, result) {
         if (err) {
           if (err.hasOwnProperty('code') && err.code == 'ER_DUP_ENTRY') {
             // email address has already been registered
-            return cb({email_exists: true});
+            deferred.reject({email_exists: true});
+          } else {
+            deferred.reject(err);
           }
-          throw err;
+        } else {
+          deferred.resolve(result.insertId);
         }
-        cb(null, result.insertId);
       });
     });
   });
+  return deferred.promise;
 };
 
 Storage.prototype.getUser = function (email, password, cb) {
@@ -128,6 +132,32 @@ Storage.prototype.saveDropboxInfo = function (email, dbx, cb) {
     if (err) throw err;
     cb(result.changedRows);
   });
+};
+
+Storage.prototype.removeInstagramInfo = function (email) {
+  var deferred = Q.defer();
+
+  this.connection.query('UPDATE users SET ? WHERE ?', [{instagram_id: null, instagram_token: null}, {email: email}], function (err, result) {
+    if (err) {
+      deferred.reject(err);
+    } else {
+      deferred.resolve();
+    }
+  });
+  return deferred.promise;
+};
+
+Storage.prototype.removeDropboxInfo = function (email) {
+  var deferred = Q.defer();
+
+  this.connection.query('UPDATE users SET ? WHERE ?', [{dropbox_id: null, dropbox_token: null}, {email: email}], function (err, result) {
+    if (err) {
+      deferred.reject(err);
+    } else {
+      deferred.resolve();
+    }
+  });
+  return deferred.promise;
 };
 
 Storage.prototype.checkMediaSavedP = function (userID, mediaID) {
