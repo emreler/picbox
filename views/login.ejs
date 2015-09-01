@@ -31,21 +31,24 @@
   </div>
   <div class="container">
     <div class="promo">
-      <h1>Welcome to PICBOX</h1>
+      <h1>Login to your account</h1>
       <h4>PicBox helps you to save photos and videos you liked on Instagram to your Dropbox.</h4>
-      <h5>After linking your Instagram and Dropbox accounts, you just like whatever on Instagram app, and it is in your Dropbox folder.<h5>
     </div>
     <br>
-    <div class="row register">
-      <div class="col-md-6 col-md-offset-3 text-center">
-        <a class="btn btn-primary btn-lg" href="/join" target="_self">Get Started</a>
+    <div class="row">
+      <div class="col-md-4 col-md-offset-4 text-center">
+        <form method="post" action="/login">
+          <div class="form-group">
+            <input type="email" class="form-control" id="email" name="email" placeholder="Email Address">
+          </div>
+          <div class="form-group">
+            <input type="password" class="form-control" id="password" name="password" placeholder="Password">
+          </div>
+          <button type="submit" class="btn btn-success btn-lg">Sign in</button>
+        </form>
       </div>
     </div>
-    <div class="row login">
-      <div class="col-md-6 col-md-offset-3 text-center">
-        or if you already have registered, <a href="/login" target="_self">login here.</a>
-      </div>
-    </div>
+
   </div>
   <!-- Latest compiled and minified JavaScript -->
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>

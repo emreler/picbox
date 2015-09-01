@@ -22,14 +22,14 @@ var ensureAuthenticated = function (req, res, next) {
 
 router.get('/login', function (req, res, next) {
   // todo: show login page
-  res.end();
+  res.render('login');
 });
 
 router.post('/login', passport.authenticate('local', {successRedirect: '/home', failureRedirect: '/'}));
 
 router.get('/join', function (req, res, next) {
   // todo: show signup page
-  res.end();
+  res.render('join');
 });
 
 router.post('/join', function (req, res, next) {

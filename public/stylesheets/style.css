@@ -1,8 +1,28 @@
 body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  font-family: 'Lato', sans-serif;;
 }
-
+.promo h1 {
+  font-size: 50px;
+  font-weight: 700;
+}
+.promo h4 {
+  font-weight: 300;
+}
+.promo {
+  text-align: center;
+  margin-top: 50px;
+}
+.header {
+  text-align: center;
+  height: 40px;
+  background-color: black;
+  padding: 10px;
+  color: white;
+  font-weight: 300;
+}
 a {
   color: #00B7FF;
+}
+.login {
+  margin-top: 15px;
 }

@@ -2,4 +2,4 @@
 /config.json
 /npm-debug.log
 /.idea/
-
+.DS_STORE
