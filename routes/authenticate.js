@@ -27,12 +27,12 @@ router.get('/login', function (req, res, next) {
 
 router.post('/login', passport.authenticate('local', {successRedirect: '/home', failureRedirect: '/'}));
 
-router.get('/signup', function (req, res, next) {
+router.get('/join', function (req, res, next) {
   // todo: show signup page
   res.end();
 });
 
-router.post('/signup', function (req, res, next) {
+router.post('/join', function (req, res, next) {
   if (req.body.hasOwnProperty('email') && req.body.hasOwnProperty('password')) {
     if (validator.isEmail(req.body.email)) {
       storage.createUser(req.body.email, req.body.password)
