@@ -1,5 +1,6 @@
 body {
-  font-family: 'Lato', sans-serif;;
+  font-family: "Lato", sans-serif;
+  background-image: url("/images/connect.png");
 }
 .promo h1 {
   font-size: 50px;
@@ -19,6 +20,29 @@ body {
   padding: 10px;
   color: white;
   font-weight: 300;
+}
+.header-main {
+  text-align: center;
+  background-color: black;
+  padding: 10px;
+  color: white;
+  font-weight: 300;
+}
+.header-main h1 {
+  font-weight: 300;
+  font-size: 144px;
+  margin-bottom: 20px;
+}
+.header-main h4 {
+  font-weight: 300;
+  font-size: 24px;
+}
+.header-main h5 {
+  font-weight: 300;
+  font-size: 14px;
+  margin-top: 14px;
+  margin-bottom: 30px;
+  color: #A5A4A4;
 }
 a {
   color: #00B7FF;
