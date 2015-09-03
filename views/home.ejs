@@ -1,6 +1,19 @@
-<div>
-  <h1>Hello foo</h1>
+<style>
+  div.row {
+    margin-bottom: 20px;
+  }
+</style>
+<div class="row">
+  <h1>Hello <%= username %></h1>
+  <p>
+    <% if(lastSync) { %>
+      Your last sync was <%= lastSync %>.
+    <% } else { %>
+      Your likes haven't been synced yet. <br>You must link both your <b>Instagram</b> and <b>Dropbox</b> accounts to let PICBOX sync your data.
+    <% } %>
+  </p>
 </div>
+
 <div class="row">
   <% if (!linkedIgm) { %>
     <a class="btn btn-lg btn-social btn-instagram" href="/authenticate/instagram" target="_self">
