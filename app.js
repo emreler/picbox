@@ -6,8 +6,6 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var session = require('express-session');
 
-var authenticate = require('./routes/authenticate');
-
 var app = express();
 
 // view engine setup
@@ -25,8 +23,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 require('./app/authentication')(app);
 
-app.use('/', authenticate);
-
+require('./routes/authenticate')(app);
 require('./routes/index')(app);
 require('./routes/users')(app);
 // app.use('/', users);

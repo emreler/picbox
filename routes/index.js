@@ -10,7 +10,7 @@ module.exports = function (app) {
     next();
   },
   function(req, res, next) {
-    app.render('index', {}, function (err, content) {
+    app.render('index', function (err, content) {
       if (err) console.error(err);
       res.render('layouts/home', {content: content});
     });
