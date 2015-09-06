@@ -49,8 +49,11 @@ storage.getUsersP()
             path: fileName
           })
           .then(function (res) {
-            storage.saveLikedMedia(user.id, like.id);
             debug(res);
+            return storage.saveLikedMedia(user.id, like.id);
+          })
+          .then(function () {
+            return storage.setLastSync(user.id, moment().unix());
           });
         });
 

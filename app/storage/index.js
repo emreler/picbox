@@ -188,10 +188,25 @@ Storage.prototype.isMediaSaved = function (userID, mediaID, cb) {
 };
 
 Storage.prototype.saveLikedMedia = function (userID, mediaID) {
+  var deferred = Q.defer();
   var savedLikesKey = 'picbox.' + userID + '.saved';
 
-  // todo: error handling
-  this.redisClient.sadd(savedLikesKey, mediaID);
+  this.redisClient.sadd(savedLikesKey, mediaID, function (err, reply) {
+    if (err) throw err;
+    deferred.resolve();
+  });
+
+  return deferred.promise;
+};
+
+Storage.prototype.setLastSync = function (userID, timestamp) {
+  var deferred = Q.defer();
+  this.connection.query('UPDATE users SET ? WHERE ?', [{last_sync: timestamp}, {id: userID}], function (err, result) {
+    if (err) throw err;
+    deferred.resolve();
+  });
+
+  return deferred.promise;
 };
 
 module.exports = Storage;
