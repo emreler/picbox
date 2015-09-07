@@ -21,16 +21,16 @@ var ensureAuthenticated = function (req, res, next) {
 
 module.exports = function (app) {
   app.get('/login', function (req, res, next) {
-    app.render('login', function (err, content) {
+    app.render('login', {errorMessage: req.flash('error')[0]}, function (err, content) {
       if (err) console.error(err);
       res.render('layouts/main', {content: content});
     });
   });
 
-  app.post('/login', passport.authenticate('local', {successRedirect: '/home', failureRedirect: '/'}));
+  app.post('/login', passport.authenticate('local', {successRedirect: '/home', failureRedirect: '/login', failureFlash: true}));
 
   app.get('/join', function (req, res, next) {
-    app.render('join', function (err, content) {
+    app.render('join', {errorMessage: req.flash('error')[0]}, function (err, content) {
       if (err) console.error(err);
       res.render('layouts/main', {content: content});
     });
@@ -48,10 +48,17 @@ module.exports = function (app) {
         })
         .catch(function (err) {
           if (err.hasOwnProperty('email_exists')) {
-
+            req.flash('error', 'This email address is already registered');
+            res.redirect('/join');
+          } else {
+            req.flash('error', 'Unknown error occured');
+            console.error(err);
+            res.redirect('/join');
           }
-          res.end();
         });
+      } else {
+        req.flash('error', 'Invalid email address');
+        res.redirect('/join');
       }
     }
   });

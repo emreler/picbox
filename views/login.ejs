@@ -5,12 +5,15 @@
 <br>
 <div class="row">
   <div class="col-md-4 col-md-offset-4 text-center">
+    <% if (errorMessage) { %>
+      <div class="alert alert-danger" role="alert"><%= errorMessage %></div>
+    <% } %>
     <form method="post" action="/login">
       <div class="form-group">
-        <input type="email" class="form-control" id="email" name="email" placeholder="Email Address" value="foo@bar.com">
+        <input type="email" class="form-control" id="email" name="email" placeholder="Email Address" value="">
       </div>
       <div class="form-group">
-        <input type="password" class="form-control" id="password" name="password" placeholder="Password" value="foo">
+        <input type="password" class="form-control" id="password" name="password" placeholder="Password" value="">
       </div>
       <button type="submit" class="btn btn-success btn-lg">Sign in</button>
     </form>

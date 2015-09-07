@@ -17,7 +17,14 @@ module.exports = function (app) {
       var storage = new Storage(config.mysql, config.redis);
       storage.getUser(email, password, function (err, user) {
         if (err) {
-          return done(null, false);
+          var msg;
+          if (err.not_exists || err.incorrect_password) {
+            msg = 'Invalid email address or password';
+          } else {
+            msg = 'Unknown error occured';
+            console.error(err);
+          }
+          return done(null, false, msg);
         }
 
         return done(null, user);
