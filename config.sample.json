@@ -17,6 +17,10 @@
   },
   "redis": {
     "host": "",
-    "port": 
+    "port":
+  },
+  "newrelic": {
+    "app_name": "",
+    "license_key": ""
   }
 }
