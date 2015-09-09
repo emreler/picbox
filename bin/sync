@@ -8,28 +8,50 @@ var Dropbox = require('../app/sdk/dropbox');
 var moment = require('moment');
 var debug = require('debug')('sync');
 var Q = require('q');
+var winston = require('winston');
 
 var storage = new Storage(config.mysql, config.redis);
 var instagram = new Instagram(config.instagram);
 var dropbox = new Dropbox(config.dropbox);
+
+var logger = new winston.Logger({
+  transports: [
+    new winston.transports.File({
+      level: 'info',
+      json: false,
+      filename: config.sync.logPath,
+      handleExceptions: true,
+      formatter: function(options) {
+        return '[' + moment().format('DD-MM-YYYY HH:mm') +'] ['+ options.level.toUpperCase() +'] '+ (undefined !== options.message ? options.message : '') +
+          (options.meta && Object.keys(options.meta).length ? '\n\t'+ JSON.stringify(options.meta) : '' );
+      }
+    })
+  ]
+});
 
 var fileName;
 
 storage.getUsersP()
 .then(function (users) {
   return users.filter(function (user) {
-    return user.instagram_token && user.dropbox_token;
+    var f = user.instagram_token && user.dropbox_token;
+    if (!f) {
+      logger.info('User %s not connected instagram or dropbox', user.email);
+    }
+    return f;
   });
 })
 .then(function (users) {
   var pArr = [];
   users.forEach(function (user) {
+    user.savedCount = 0;
     var p = dropbox.isAppInstalledP(user.dropbox_token)
     .then(function () {
       return instagram.getLikesP(user.instagram_token);
     })
     .then(function (likes) {
       var pArr2 = [];
+      logger.info('Starting saving %s likes. Total like count: ', user.email, likes.length);
       likes.forEach(function (like) {
 
         var p2 = storage.checkMediaSavedP(user.id, like.id)
@@ -50,6 +72,7 @@ storage.getUsersP()
           })
           .then(function (res) {
             debug(res);
+            user.savedCount++;
             return storage.saveLikedMedia(user.id, like.id);
           })
           .then(function () {
@@ -60,15 +83,22 @@ storage.getUsersP()
         pArr2.push(p2);
       });
       return Q.allSettled(pArr2);
+    })
+    .then(function() {
+      logger.info('Saved %s likes. Total saved: %d', user.email, user.savedCount);
     });
     pArr.push(p);
   });
   return Q.allSettled(pArr);
 })
 .catch(function (err) {
-  console.error(err);
+  if (err instanceof Error) {
+    logger.error(err.message, err.stack);
+  } else {
+    logger.error(err);
+  }
 })
 .done(function () {
   storage.terminate();
-  debug('Done');
+  logger.info('Done');
 });

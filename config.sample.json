@@ -22,5 +22,8 @@
   "newrelic": {
     "app_name": "",
     "license_key": ""
+  },
+  "sync": {
+    "logPath": ""
   }
 }
