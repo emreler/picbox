@@ -43,23 +43,24 @@ storage.getUsersP()
 })
 .then(function (users) {
   var pArr = [];
-  users.forEach(function (user) {
+  return Q.allSettled(users.map(function (user) {
     user.savedCount = 0;
-    var p = dropbox.isAppInstalledP(user.dropbox_token)
+    return dropbox.isAppInstalledP(user.dropbox_token)
     .then(function () {
       return instagram.getLikesP(user.instagram_token);
     })
     .then(function (likes) {
       var pArr2 = [];
       logger.info('Starting saving %s likes. Total like count: ', user.email, likes.length);
-      likes.forEach(function (like) {
-
-        var p2 = storage.checkMediaSavedP(user.id, like.id)
+      return Q.allSettled(likes.map(function (like) {
+        return storage.checkMediaSavedP(user.id, like.id)
         .then(function (saved) {
 
           if (saved) {
-            debug(user.id, like.id, 'already saved');
+            // console.log(user.email, like.link, 'already saved');
             return;
+          } else {
+            // console.log('save', user.email, like.link, like.id);
           }
 
           fileName = like.user.username + ' ' + moment.unix(like.created_time).format('DD-MM-YYYY HH.mm') + '.jpg';
@@ -73,23 +74,35 @@ storage.getUsersP()
           .then(function (res) {
             debug(res);
             user.savedCount++;
-            return storage.saveLikedMedia(user.id, like.id);
-          })
-          .then(function () {
-            return storage.setLastSync(user.id, moment().unix());
+            // return storage.saveLikedMedia(user.id, like.id);
           });
+        })
+        .catch(function (err) {
+          if (err instanceof Error) {
+            logger.error(err.message, err.stack);
+          } else {
+            logger.error(err);
+          }
         });
-
-        pArr2.push(p2);
+      }))
+      .then(function (allPromiseResults) {
+        return storage.saveLikedMedia(user.id, likes.map(function (like) {return like.id;}), true);
       });
-      return Q.allSettled(pArr2);
+    })
+    .then(function () {
+      return storage.setLastSync(user.id, moment().unix());
     })
     .then(function() {
-      logger.info('Saved %s likes. Total saved: %d', user.email, user.savedCount);
+      return logger.info('Saved %s likes. Total saved: %d', user.email, user.savedCount);
+    })
+    .catch(function (err) {
+      if (err instanceof Error) {
+        logger.error(err.message, err.stack);
+      } else {
+        logger.error(err);
+      }
     });
-    pArr.push(p);
-  });
-  return Q.allSettled(pArr);
+  }));
 })
 .catch(function (err) {
   if (err instanceof Error) {

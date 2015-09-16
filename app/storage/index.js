@@ -163,38 +163,59 @@ Storage.prototype.removeDropboxInfo = function (email) {
 Storage.prototype.checkMediaSavedP = function (userID, mediaID) {
   var deferred = Q.defer();
 
-  this.isMediaSaved(userID, mediaID, function (err, saved) {
+  var savedLikesKey = 'picbox.' + userID + '.saved';
+  this.redisClient.zscore(savedLikesKey, mediaID, function (err, reply) {
     if (err) throw err;
-    deferred.resolve(saved);
+
+    deferred.resolve(!!reply);
   });
 
   return deferred.promise;
 };
 
-Storage.prototype.isMediaSaved = function (userID, mediaID, cb) {
-  var savedLikesKey = 'picbox.' + userID + '.saved';
-  this.redisClient.sismember(savedLikesKey, mediaID, function (err, reply) {
-    if (err) {
-      return cb(err);
-    }
-    if (reply === 1) {
-      return cb(null, true);
-    } else if(reply === 0) {
-      return cb(null, false);
-    } else {
-      return cb(new Error('Unknown response: ' + reply));
-    }
-  });
-};
-
-Storage.prototype.saveLikedMedia = function (userID, mediaID) {
+Storage.prototype.saveLikedMedia = function (userID, mediaIDArr, replace) {
   var deferred = Q.defer();
+  replace = replace === true ? true : false;
   var savedLikesKey = 'picbox.' + userID + '.saved';
+  var score = Date.now();
 
-  this.redisClient.sadd(savedLikesKey, mediaID, function (err, reply) {
-    if (err) throw err;
-    deferred.resolve();
+  var args = [savedLikesKey];
+  if (!(mediaIDArr instanceof Array)) {
+    mediaIDArr = [mediaIDArr];
+  }
+  mediaIDArr.forEach(function (mediaID) {
+    args.push(score, mediaID);
   });
+
+  var _this = this;
+
+  if (replace) {
+    this.redisClient.del(savedLikesKey, function (err, reply) {
+      if (err) throw err;
+      _this.redisClient.zadd(args, function (err, reply) {
+        if (err) throw err;
+        deferred.resolve();
+      });
+    });
+  } else {
+    this.redisClient.zadd(args, function (err, reply) {
+      if (err) throw err;
+      deferred.resolve();
+      // _this.redisClient.zcard(savedLikesKey, function (err, setCount) {
+      //   console.log('current card ', setCount);
+      //   if (setCount > 20) {
+      //     var remCount = setCount - 20;
+      //     console.log('to remove: '+remCount);
+      //     _this.redisClient.zremrangebyrank(savedLikesKey, 0, remCount - 1, function (err, reply) {
+      //       if (err) throw err;
+      //       deferred.resolve();
+      //     });
+      //   } else {
+      //     deferred.resolve();
+      //   }
+      // });
+    });
+  }
 
   return deferred.promise;
 };

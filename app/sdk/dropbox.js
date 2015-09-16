@@ -140,6 +140,7 @@ Dropbox.prototype.saveUrlP = function (params) {
         if (++params.retry === _this.maxRetry) {
           deferred.reject(new Error('Retries failed'));
         } else {
+          debug('Retrying ['+params.retry+']...');
           Q.delay(300 * params.retry)
           .then(function () {
             return _this.saveUrlP(params);
@@ -156,7 +157,7 @@ Dropbox.prototype.saveUrlP = function (params) {
       }
     } else {
       if (params.retry > 0) {
-        console.log('completed after '+ params.retry + ' retries');
+        debug('completed after '+ params.retry + ' retries');
       }
       deferred.resolve(body);
     }
