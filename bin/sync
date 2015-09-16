@@ -20,7 +20,7 @@ var logger = new winston.Logger({
       level: 'info',
       json: false,
       filename: config.sync.logPath,
-      handleExceptions: true,
+      handleExceptions: false,
       formatter: function(options) {
         return '[' + moment().format('DD-MM-YYYY HH:mm') +'] ['+ options.level.toUpperCase() +'] '+ (undefined !== options.message ? options.message : '') +
           (options.meta && Object.keys(options.meta).length ? '\n\t'+ JSON.stringify(options.meta) : '' );
