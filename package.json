@@ -16,6 +16,7 @@
     "moment": "^2.10.6",
     "morgan": "~1.6.1",
     "mysql": "^2.8.0",
+    "newrelic": "^1.22.0",
     "passport": "^0.2.2",
     "passport-local": "^1.0.0",
     "q": "^1.4.1",
