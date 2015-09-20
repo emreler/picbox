@@ -4,6 +4,7 @@
  * Module dependencies.
  */
 
+require('newrelic');
 var app = require('../app');
 var debug = require('debug')('picbox:server');
 var http = require('http');
