@@ -22,8 +22,8 @@ var logger = new winston.Logger({
       filename: config.sync.logPath,
       handleExceptions: false,
       formatter: function(options) {
-        return '[' + moment().format('DD-MM-YYYY HH:mm') +'] ['+ options.level.toUpperCase() +'] '+ (undefined !== options.message ? options.message : '') +
-          (options.meta && Object.keys(options.meta).length ? '\n\t'+ JSON.stringify(options.meta) : '' );
+        return '[' + moment().format('DD-MM-YYYY HH:mm') + '] [' + options.level.toUpperCase() + '] ' + (options.message !==  undefined ? options.message : '') +
+          (options.meta && Object.keys(options.meta).length ? '\n\t' + JSON.stringify(options.meta) : '');
       }
     })
   ]
@@ -42,7 +42,6 @@ storage.getUsersP()
   });
 })
 .then(function (users) {
-  var pArr = [];
   return Q.allSettled(users.map(function (user) {
     user.savedCount = 0;
     return dropbox.isAppInstalledP(user.dropbox_token)
@@ -50,19 +49,13 @@ storage.getUsersP()
       return instagram.getLikesP(user.instagram_token);
     })
     .then(function (likes) {
-      var pArr2 = [];
       logger.info('Starting saving %s likes. Total like count: ', user.email, likes.length);
       return Q.allSettled(likes.map(function (like) {
         return storage.checkMediaSavedP(user.id, like.id)
         .then(function (saved) {
-
           if (saved) {
-            // console.log(user.email, like.link, 'already saved');
             return;
-          } else {
-            // console.log('save', user.email, like.link, like.id);
           }
-
           fileName = like.user.username + ' ' + moment.unix(like.created_time).format('DD-MM-YYYY HH.mm') + '.jpg';
           debug(user.id, like.id, 'saving as '+fileName);
 
@@ -86,7 +79,22 @@ storage.getUsersP()
         });
       }))
       .then(function (allPromiseResults) {
-        return storage.saveLikedMedia(user.id, likes.map(function (like) {return like.id;}), true);
+        var likeIDs = likes.map(function (like) {
+          if (like.hasOwnProperty('id')) {
+            return like.id;
+          } else {
+            return null;
+          }
+        }).filter(function (likeID) {
+          return !!likeID;
+        });
+
+        if (likeIDs.length > 0) {
+          return storage.saveLikedMedia(user.id, likeIDs, true);
+        }
+      })
+      .catch(function (e) {
+        logger.error('Error while saving to redis', e);
       });
     })
     .then(function () {
