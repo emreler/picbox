@@ -36,7 +36,7 @@ storage.getUsers()
   return users.filter(function (user) {
     var f = user.instagram_token && user.dropbox_token;
     if (!f) {
-      logger.info('User %s not connected instagram or dropbox', user.email);
+      // logger.info('User %s not connected instagram or dropbox', user.email);
     }
     return f;
   });
@@ -62,7 +62,7 @@ storage.getUsers()
       return instagram.getLikesP(user.instagram_token);
     })
     .then(function (likes) {
-      logger.info('Starting saving %s likes. Total like count: ', user.email, likes.length);
+      user.totalLikeCount = likes.length;
       return Q.allSettled(likes.map(function (like) {
         return storage.checkMediaSaved(user.id, like.id)
         .then(function (saved) {
@@ -114,7 +114,7 @@ storage.getUsers()
       return storage.setLastSync(user.id, moment().unix());
     })
     .then(function() {
-      return logger.info('Saved %s likes. Total saved: %d', user.email, user.savedCount);
+      return logger.info('Completed %s. Total likes: %d, Total saved: %d', user.email, user.totalLikeCount, user.savedCount);
     })
     .catch(function (err) {
       if (err instanceof Error) {
