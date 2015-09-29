@@ -73,27 +73,7 @@ Dropbox.prototype.getAccessToken = function (code, cb) {
 
 };
 
-Dropbox.prototype.isAppInstalled = function (accessToken, cb) {
-  var options = {
-    url: 'https://api.dropboxapi.com/1/account/info',
-    method: 'GET',
-    json: true,
-    headers: {
-      Authorization: 'Bearer ' + accessToken
-    }
-  };
-
-  request(options, function (err, response, body) {
-    if (err) throw err;
-    if (response.statusCode == 200 && body.hasOwnProperty('uid')) {
-      return cb(null);
-    } else if (body.hasOwnProperty('error')) {
-      return cb(body.error);
-    }
-  });
-};
-
-Dropbox.prototype.isAppInstalledP = function (accessToken) {
+Dropbox.prototype.isAppInstalled = function (accessToken) {
   var deferred = Q.defer();
 
   var options = {
@@ -110,7 +90,11 @@ Dropbox.prototype.isAppInstalledP = function (accessToken) {
     if (response.statusCode == 200 && body.hasOwnProperty('uid')) {
       deferred.resolve();
     } else if (body.hasOwnProperty('error')) {
-      deferred.reject(new Error(body.error));
+      if (body.error.indexOf('has expired') >= 0) {
+        deferred.reject({expired: true});
+      } else {
+        deferred.reject(new Error(body.error));
+      }
     }
   });
 

@@ -19,6 +19,10 @@ var Storage = function (mysqlConfig, redisConfig) {
   });
 
   this.redisClient = redis.createClient(redisConfig.port, redisConfig.host);
+
+  this.getRedisCacheKey = function (userID) {
+    return 'picbox.' + userID + '.saved';
+  };
 };
 
 Storage.prototype.terminate = function () {
@@ -83,22 +87,8 @@ Storage.prototype.getUser = function (email, password, cb) {
   }
 };
 
-Storage.prototype.getUsers = function (limit, cb) {
-  if (!cb && typeof limit == 'function') {
-    cb = limit;
-    limit = 100;
-  }
-  this.connection.query('SELECT id, email, instagram_id, instagram_token, dropbox_id, dropbox_token FROM users LIMIT ?', [limit], function (err, results) {
-    if (err) {
-      return cb(err);
-    }
-
-    cb(null, results);
-  });
-};
-
-Storage.prototype.getUsersP = function (limit) {
-  limit = limit || 100;
+Storage.prototype.getUsers = function (limit) {
+  limit = limit || 500;
   var deferred = Q.defer();
   this.connection.query('SELECT id, email, instagram_id, instagram_token, dropbox_id, dropbox_token FROM users LIMIT ?', [limit], function (err, results) {
     if (err) {
@@ -160,10 +150,10 @@ Storage.prototype.removeDropboxInfo = function (email) {
   return deferred.promise;
 };
 
-Storage.prototype.checkMediaSavedP = function (userID, mediaID) {
+Storage.prototype.checkMediaSaved = function (userID, mediaID) {
   var deferred = Q.defer();
 
-  var savedLikesKey = 'picbox.' + userID + '.saved';
+  var savedLikesKey = this.getRedisCacheKey(userID);
   this.redisClient.zscore(savedLikesKey, mediaID, function (err, reply) {
     if (err) throw err;
 
@@ -176,7 +166,7 @@ Storage.prototype.checkMediaSavedP = function (userID, mediaID) {
 Storage.prototype.saveLikedMedia = function (userID, mediaIDArr, replace) {
   var deferred = Q.defer();
   replace = replace === true ? true : false;
-  var savedLikesKey = 'picbox.' + userID + '.saved';
+  var savedLikesKey = this.getRedisCacheKey(userID);
   var score = Date.now();
 
   var args = [savedLikesKey];
@@ -217,6 +207,16 @@ Storage.prototype.saveLikedMedia = function (userID, mediaIDArr, replace) {
     });
   }
 
+  return deferred.promise;
+};
+
+Storage.prototype.deleteLikedCache = function (userID) {
+  var deferred = Q.defer();
+  var savedLikesKey = this.getRedisCacheKey(userID);
+  this.redisClient.del(savedLikesKey, function (err, reply) {
+    if (err) throw err;
+    deferred.resolve();
+  });
   return deferred.promise;
 };
 

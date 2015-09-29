@@ -31,7 +31,7 @@ var logger = new winston.Logger({
 
 var fileName;
 
-storage.getUsersP()
+storage.getUsers()
 .then(function (users) {
   return users.filter(function (user) {
     var f = user.instagram_token && user.dropbox_token;
@@ -44,14 +44,27 @@ storage.getUsersP()
 .then(function (users) {
   return Q.allSettled(users.map(function (user) {
     user.savedCount = 0;
-    return dropbox.isAppInstalledP(user.dropbox_token)
+    return dropbox.isAppInstalled(user.dropbox_token)
+    .catch(function (e) {
+      if (e && e.hasOwnProperty('expired') && e.expired === true) {
+        return storage.removeDropboxInfo(user.email)
+        .then(function () {
+          return storage.deleteLikedCache(user.id);
+        })
+        .then(function () {
+          throw new Error(user.email + ' Dropbox token has expired and removed Dropbox credentials from database.');
+        });
+      } else {
+        throw e;
+      }
+    })
     .then(function () {
       return instagram.getLikesP(user.instagram_token);
     })
     .then(function (likes) {
       logger.info('Starting saving %s likes. Total like count: ', user.email, likes.length);
       return Q.allSettled(likes.map(function (like) {
-        return storage.checkMediaSavedP(user.id, like.id)
+        return storage.checkMediaSaved(user.id, like.id)
         .then(function (saved) {
           if (saved) {
             return;
