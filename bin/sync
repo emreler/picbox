@@ -29,8 +29,6 @@ var logger = new winston.Logger({
   ]
 });
 
-var fileName;
-
 storage.getUsers()
 .then(function (users) {
   return users.filter(function (user) {
@@ -69,12 +67,22 @@ storage.getUsers()
           if (saved) {
             return;
           }
-          fileName = like.user.username + ' ' + moment.unix(like.created_time).format('DD-MM-YYYY HH.mm') + '.jpg';
+          var fileName, fileExtension, mediaUrl;
+
+          if (like.hasOwnProperty('videos')) {
+            fileExtension = '.mp4';
+            mediaUrl = like.videos.standard_resolution.url;
+          } else {
+            fileExtension = '.jpg';
+            mediaUrl = like.images.standard_resolution.url;
+          }
+
+          fileName = like.user.username + ' ' + moment.unix(like.created_time).format('DD-MM-YYYY HH.mm') + fileExtension;
           debug(user.id, like.id, 'saving as '+fileName);
 
           return dropbox.saveUrlP({
             accessToken: user.dropbox_token,
-            url: like.images.standard_resolution.url,
+            url: mediaUrl,
             path: fileName
           })
           .then(function (res) {
