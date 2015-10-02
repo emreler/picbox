@@ -21,6 +21,10 @@ body {
   color: white;
   font-weight: 300;
 }
+.header a {
+  color: inherit;
+  text-decoration: inherit;
+}
 .header-main {
   text-align: center;
   background-color: black;
