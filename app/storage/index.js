@@ -24,7 +24,11 @@ var Storage = function (mysqlConfig, redisConfig) {
     return 'picbox.' + userID + '.saved';
   };
 
-  this.totalSavedCountKey = 'picbox.total.saved';
+  this.getUserSavedCountKey = function (userID) {
+    return 'picbox.' + userID + '.saved.count';
+  };
+
+  this.totalSavedCountKey = 'picbox.total.saved.count';
 };
 
 Storage.prototype.terminate = function () {
@@ -152,10 +156,22 @@ Storage.prototype.removeDropboxInfo = function (email) {
   return deferred.promise;
 };
 
-Storage.prototype.incTotalSavedCount = function (cnt) {
+Storage.prototype.incUserSavedCount = function (userID, count) {
   var deferred = Q.defer();
 
-  this.redisClient.incrby(this.totalSavedCountKey, cnt, function (err, reply) {
+  this.redisClient.incrby(this.getUserSavedCountKey(userID), count, function (err, reply) {
+    if (err) throw err;
+
+    deferred.resolve(!!reply);
+  });
+
+  return deferred.promise;
+};
+
+Storage.prototype.incTotalSavedCount = function (count) {
+  var deferred = Q.defer();
+
+  this.redisClient.incrby(this.totalSavedCountKey, count, function (err, reply) {
     if (err) throw err;
 
     deferred.resolve(!!reply);

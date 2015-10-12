@@ -122,7 +122,11 @@ storage.getUsers()
       return storage.setLastSync(user.id, moment().unix());
     })
     .then(function() {
-      return logger.info('Completed %s. Total likes: %d, Total saved: %d', user.email, user.totalLikeCount, user.savedCount);
+      return storage.incTotalSavedCount(user.savedCount);
+      // return logger.info('Completed %s. Total likes: %d, Total saved: %d', user.email, user.totalLikeCount, user.savedCount);
+    })
+    .then(function() {
+      return storage.incUserSavedCount(user.id, user.savedCount);
     })
     .catch(function (err) {
       if (err instanceof Error) {
