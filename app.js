@@ -28,7 +28,6 @@ require('./app/authentication')(app);
 require('./routes/authenticate')(app);
 require('./routes/index')(app);
 require('./routes/users')(app);
-// app.use('/', users);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

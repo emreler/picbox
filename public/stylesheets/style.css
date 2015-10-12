@@ -57,3 +57,11 @@ a {
 .contact {
   margin-top: 50px;
 }
+.counter {
+  font-size: 22px;
+  font-weight: 300;
+  margin: 30px;
+}
+.counter .number {
+  font-size: 50px;
+}
