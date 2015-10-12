@@ -23,6 +23,8 @@ var Storage = function (mysqlConfig, redisConfig) {
   this.getRedisCacheKey = function (userID) {
     return 'picbox.' + userID + '.saved';
   };
+
+  this.totalSavedCountKey = 'picbox.total.saved';
 };
 
 Storage.prototype.terminate = function () {
@@ -148,6 +150,31 @@ Storage.prototype.removeDropboxInfo = function (email) {
     }
   });
   return deferred.promise;
+};
+
+Storage.prototype.incTotalSavedCount = function (cnt) {
+  var deferred = Q.defer();
+
+  this.redisClient.incrby(this.totalSavedCountKey, cnt, function (err, reply) {
+    if (err) throw err;
+
+    deferred.resolve(!!reply);
+  });
+
+  return deferred.promise;
+};
+
+Storage.prototype.getTotalSavedCount = function () {
+  var deferred = Q.defer();
+
+  this.redisClient.get(this.totalSavedCountKey, function (err, reply) {
+    if (err) throw err;
+
+    deferred.resolve(reply);
+  });
+
+  return deferred.promise;
+
 };
 
 Storage.prototype.checkMediaSaved = function (userID, mediaID) {
