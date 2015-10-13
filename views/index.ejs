@@ -34,7 +34,8 @@
   var current = 0;
   var options = {
     useEasing: true,
-    useGrouping: false
+    useGrouping: true,
+    separator: ','
   };
   socket.on('up', function(newCounter){
     var elem = document.querySelector('.counter .number');
