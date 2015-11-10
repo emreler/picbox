@@ -90,8 +90,8 @@ Dropbox.prototype.isAppInstalled = function (accessToken) {
     if (response.statusCode == 200 && body.hasOwnProperty('uid')) {
       deferred.resolve();
     } else if (body.hasOwnProperty('error')) {
-      if (body.error.indexOf('has expired') >= 0) {
-        deferred.reject({expired: true});
+      if (body.error.indexOf('has expired') >= 0 || body.error.indexOf('User has removed their App folder') >= 0) {
+        deferred.reject({removeCredentials: true});
       } else {
         deferred.reject(new Error(body.error));
       }

@@ -15,6 +15,12 @@ Instagram.prototype.getAuthUrl = function () {
 };
 
 Instagram.prototype.getLikes = function (accessToken, cb) {
+
+};
+
+Instagram.prototype.getLikesP = function (accessToken) {
+  var deferred = Q.defer();
+
   var queryParams = querystring.stringify({
     'access_token': accessToken,
     count: 20
@@ -22,8 +28,7 @@ Instagram.prototype.getLikes = function (accessToken, cb) {
 
   var options = {
     host: this.apiHost,
-    path: '/v1/users/self/media/liked?'+queryParams,
-    // qs: queryParams
+    path: '/v1/users/self/media/liked?'+queryParams
   };
 
   var req = https.request(options, function (res) {
@@ -45,30 +50,24 @@ Instagram.prototype.getLikes = function (accessToken, cb) {
         response = JSON.parse(responseStr);
       } catch (e) {
         // todo: show error
-        return cb(e);
+        deferred.reject(e);
       }
 
       if (res.statusCode != 200) {
         if (response.hasOwnProperty('meta') && response.meta.hasOwnProperty('error_message')) {
-          return cb(response.meta.error_message);
+          if (response.meta.error_message.indexOf('The access_token provided is invalid') >= 0) {
+            deferred.reject({removeCredentials: true});
+          } else {
+            deferred.reject(new Error(response.meta.error_message));
+          }
         }
       }
-      return cb(null, response.data);
+      deferred.resolve(response.data);
     });
   });
 
   req.end();
-};
 
-Instagram.prototype.getLikesP = function (accessToken) {
-  var deferred = Q.defer();
-  this.getLikes(accessToken, function (err, likes) {
-    if (err) {
-      deferred.reject(err);
-    } else {
-      deferred.resolve(likes);
-    }
-  });
   return deferred.promise;
 };
 

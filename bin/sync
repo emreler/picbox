@@ -44,13 +44,13 @@ storage.getUsers()
     user.savedCount = 0;
     return dropbox.isAppInstalled(user.dropbox_token)
     .catch(function (e) {
-      if (e && e.hasOwnProperty('expired') && e.expired === true) {
+      if (e && e.hasOwnProperty('removeCredentials') && e.removeCredentials === true) {
         return storage.removeDropboxInfo(user.email)
         .then(function () {
           return storage.deleteLikedCache(user.id);
         })
         .then(function () {
-          throw new Error(user.email + ' Dropbox token has expired and removed Dropbox credentials from database.');
+          throw new Error(user.email + ' Dropbox token is invalid and removed Dropbox credentials from database.');
         });
       } else {
         throw e;
@@ -58,6 +58,19 @@ storage.getUsers()
     })
     .then(function () {
       return instagram.getLikesP(user.instagram_token);
+    })
+    .catch(function (e) {
+      if (e && e.hasOwnProperty('removeCredentials') && e.removeCredentials === true) {
+        return storage.removeInstagramInfo(user.email)
+        .then(function () {
+          return storage.deleteLikedCache(user.id);
+        })
+        .then(function () {
+          throw new Error(user.email + ' Instagram token is invalid and removed Instagram credentials from database.');
+        });
+      } else {
+        throw e;
+      }
     })
     .then(function (likes) {
       user.totalLikeCount = likes.length;
@@ -138,6 +151,7 @@ storage.getUsers()
   }));
 })
 .catch(function (err) {
+  console.log('2 catched');
   if (err instanceof Error) {
     logger.error(err.message, err.stack);
   } else {
