@@ -101,6 +101,55 @@ Dropbox.prototype.isAppInstalled = function (accessToken) {
   return deferred.promise;
 };
 
+Dropbox.prototype.getFileList = function (accessToken) {
+  var deferred = Q.defer();
+  var options = {
+    url: 'https://api.dropboxapi.com/1/metadata/auto/?' + querystring.stringify({file_limit: 25000, list: true}),
+    method: 'GET',
+    json: true,
+    headers: {
+      Authorization: 'Bearer ' + accessToken
+    }
+  };
+
+  _this = this;
+  request(options, function (err, res, body) {
+    if (err) {
+      deferred.reject(err);
+    }
+    deferred.resolve(body.contents);
+  });
+  return deferred.promise;
+}
+
+Dropbox.prototype.deleteFile = function (accessToken, path) {
+  var deferred = Q.defer();
+  var options = {
+    url: 'https://api.dropboxapi.com/1/fileops/delete',
+    method: 'POST',
+    form: {
+      root: 'auto',
+      path: path
+    },
+    headers: {
+      Authorization: 'Bearer ' + accessToken
+    }
+  };
+
+  _this = this;
+  request(options, function (err, res, body) {
+    if (err) {
+      deferred.reject(err);
+    }
+    body = JSON.parse(body);
+    if (body.hasOwnProperty('error')) {
+      deferred.reject(body.error);
+    }
+    deferred.resolve();
+  });
+  return deferred.promise;
+}
+
 Dropbox.prototype.saveUrlP = function (params) {
   var deferred = Q.defer();
   params.retry = params.retry || 0;
