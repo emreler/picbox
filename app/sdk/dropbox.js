@@ -91,7 +91,7 @@ Dropbox.prototype.isAppInstalled = function (accessToken) {
       deferred.resolve();
     } else if (body.hasOwnProperty('error')) {
       if (body.error.indexOf('has expired') >= 0 || body.error.indexOf('User has removed their App folder') >= 0) {
-        deferred.reject({removeCredentials: true});
+        deferred.reject({removeCredentials: true, message: body.error});
       } else {
         deferred.reject(new Error(body.error));
       }

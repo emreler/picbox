@@ -56,7 +56,7 @@ Instagram.prototype.getLikesP = function (accessToken) {
       if (res.statusCode != 200) {
         if (response.hasOwnProperty('meta') && response.meta.hasOwnProperty('error_message')) {
           if (response.meta.error_message.indexOf('The access_token provided is invalid') >= 0) {
-            deferred.reject({removeCredentials: true});
+            deferred.reject({removeCredentials: true, message: response.meta.error_message});
           } else {
             deferred.reject(new Error(response.meta.error_message));
           }
