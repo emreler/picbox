@@ -32,45 +32,16 @@ var logger = new winston.Logger({
 storage.getUsers()
 .then(function (users) {
   return users.filter(function (user) {
-    var f = user.instagram_token && user.dropbox_token;
-    if (!f) {
-      // logger.info('User %s not connected instagram or dropbox', user.email);
-    }
-    return f;
+    return user.instagram_token && user.dropbox_token;
   });
 })
 .then(function (users) {
+  users = [users[0]];
   return Q.allSettled(users.map(function (user) {
     user.savedCount = 0;
     return dropbox.isAppInstalled(user.dropbox_token)
-    .catch(function (e) {
-      if (e && e.hasOwnProperty('removeCredentials') && e.removeCredentials === true) {
-        return storage.removeDropboxInfo(user.email)
-        .then(function () {
-          return storage.deleteLikedCache(user.id);
-        })
-        .then(function () {
-          throw new Error(user.email + ' Dropbox token is invalid and removed Dropbox credentials from database. Message: ' + e.message);
-        });
-      } else {
-        throw e;
-      }
-    })
     .then(function () {
       return instagram.getLikesP(user.instagram_token);
-    })
-    .catch(function (e) {
-      if (e && e.hasOwnProperty('removeCredentials') && e.removeCredentials === true) {
-        return storage.removeInstagramInfo(user.email)
-        .then(function () {
-          return storage.deleteLikedCache(user.id);
-        })
-        .then(function () {
-          throw new Error(user.email + ' Instagram token is invalid and removed Instagram credentials from database. Message: ' + e.message);
-        });
-      } else {
-        throw e;
-      }
     })
     .then(function (likes) {
       user.totalLikeCount = likes.length;
@@ -78,8 +49,10 @@ storage.getUsers()
         return storage.checkMediaSaved(user.id, like.id)
         .then(function (saved) {
           if (saved) {
+            debug(user.id, like.id, 'saved already');
             return;
           }
+
           var fileName, fileExtension, mediaUrl;
 
           if (like.hasOwnProperty('videos')) {
@@ -91,7 +64,7 @@ storage.getUsers()
           }
 
           fileName = like.user.username + ' ' + moment.unix(like.created_time).format('DD-MM-YYYY HH.mm') + fileExtension;
-          debug(user.id, like.id, 'saving as '+fileName);
+          debug(user.id, like.id, 'saving as ' + fileName);
 
           return dropbox.saveUrlP({
             accessToken: user.dropbox_token,
@@ -100,9 +73,11 @@ storage.getUsers()
           })
           .then(function (res) {
             debug(res);
-            user.savedCount++;
-            // return storage.saveLikedMedia(user.id, like.id);
-          });
+          })
+        })
+        .then(function () {
+          user.savedCount++;
+          // return storage.saveLikedMedia(user.id, like.id);
         })
         .catch(function (err) {
           if (err instanceof Error) {
@@ -126,9 +101,6 @@ storage.getUsers()
         if (likeIDs.length > 0) {
           return storage.saveLikedMedia(user.id, likeIDs, true);
         }
-      })
-      .catch(function (e) {
-        logger.error('Error while saving to redis', e);
       });
     })
     .then(function () {
@@ -141,8 +113,24 @@ storage.getUsers()
     .then(function() {
       return storage.incUserSavedCount(user.id, user.savedCount);
     })
-    .catch(function (err) {
-      if (err instanceof Error) {
+    .catch(function (e) {
+      if (e.hasOwnProperty('removeDbxCredentials')) {
+        return storage.removeDropboxInfo(user.email)
+        .then(function () {
+          return storage.deleteLikedCache(user.id);
+        })
+        .then(function () {
+          logger.info(user.email + ' Dropbox token is invalid and removed Dropbox credentials from database. Message: ' + e.message);
+        })
+      } else if (e.hasOwnProperty('removeIgmCredentials')) {
+        return storage.removeInstagramInfo(user.email)
+        .then(function () {
+          return storage.deleteLikedCache(user.id);
+        })
+        .then(function () {
+          logger.info(user.email + ' Instagram token is invalid and removed Instagram credentials from database. Message: ' + e.message);
+        })
+      } else if (err instanceof Error) {
         logger.error(err.message, err.stack);
       } else {
         logger.error(err);

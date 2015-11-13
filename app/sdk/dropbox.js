@@ -91,7 +91,7 @@ Dropbox.prototype.isAppInstalled = function (accessToken) {
       deferred.resolve();
     } else if (body.hasOwnProperty('error')) {
       if (body.error.indexOf('has expired') >= 0 || body.error.indexOf('User has removed their App folder') >= 0) {
-        deferred.reject({removeCredentials: true, message: body.error});
+        deferred.reject({removeDbxCredentials: true, message: body.error});
       } else {
         deferred.reject(new Error(body.error));
       }
@@ -141,17 +141,24 @@ Dropbox.prototype.deleteFile = function (accessToken, path) {
     if (err) {
       deferred.reject(err);
     }
-    body = JSON.parse(body);
-    if (body.hasOwnProperty('error')) {
-      deferred.reject(body.error);
+    try {
+      body = JSON.parse(body);
+      if (body.hasOwnProperty('error')) {
+        deferred.reject(body.error);
+      }
+      deferred.resolve();
+    } catch (e) {
+      deferred.reject('invalid json', body, e);
     }
-    deferred.resolve();
+
   });
   return deferred.promise;
 }
 
 Dropbox.prototype.saveUrlP = function (params) {
   var deferred = Q.defer();
+  // Q.delay(300).then(function () {return deferred.reject('fooer');});
+  // return deferred.promise;
   params.retry = params.retry || 0;
 
   var options = {
