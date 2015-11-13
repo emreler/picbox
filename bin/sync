@@ -73,11 +73,8 @@ storage.getUsers()
           })
           .then(function (res) {
             debug(res);
-          })
-        })
-        .then(function () {
-          user.savedCount++;
-          // return storage.saveLikedMedia(user.id, like.id);
+            user.savedCount++;
+          });
         })
         .catch(function (err) {
           if (err instanceof Error) {
