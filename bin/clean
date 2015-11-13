@@ -1,0 +1,84 @@
+#!/usr/bin/env node
+
+// todo: get config file path from argv
+var config = require('../config');
+var Storage = require('../app/storage');
+var Dropbox = require('../app/sdk/dropbox');
+var moment = require('moment');
+var debug = require('debug')('sync');
+var Q = require('q');
+var winston = require('winston');
+var async = require('async');
+
+var storage = new Storage(config.mysql, config.redis);
+var dropbox = new Dropbox(config.dropbox);
+
+storage.getUsers()
+.then(function (users) {
+  return users.filter(function (user) {
+    return !!user.dropbox_token;
+  });
+})
+.then(function (users) {
+  return Q.allSettled(users.map(function (user) {
+    return dropbox.getFileList(user.dropbox_token)
+    .then(function(fileList) {
+      var re = /^.* \(\d+\)\.(jpg|mp4)$/
+      var filePaths = fileList.filter(function (file) {
+        return re.test(file.path);
+      })
+      .map(function (file) {
+        return file.path;
+      });
+
+      // return console.log('To delete', filePaths);
+
+      var handler = function (accessToken, filePath) {
+        return function (done) {
+          async.retry({times: 5, interval: 1000},
+            function (cb, res) {
+              dropbox.deleteFile(accessToken, filePath)
+              .then(function () {
+                cb(null);
+              })
+              .catch(function (err) {
+                cb(err);
+              });
+            },
+            function (err, result) {
+              if (err) {
+                console.error('failed to delete', err);
+              } else {
+                console.log('deleted', filePath);
+              }
+              done();
+            }
+          );
+        };
+      };
+
+      var tasks = [];
+      filePaths.forEach(function (filePath) {
+        tasks.push(handler(user.dropbox_token, filePath));
+      });
+
+      console.log(tasks.length, 'files of user', user.email);
+
+      var deferred = Q.defer();
+      async.parallelLimit(tasks, 80, function (err, res) {
+        deferred.resolve();
+      });
+      return deferred.promise;
+    })
+    .catch(function (e) {
+      console.error('0 Error', e);
+    })
+  }));
+})
+.catch(function (err) {
+  console.log('1 Error', err);
+})
+.done(function () {
+  storage.terminate();
+  console.log('Done');
+});
