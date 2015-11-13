@@ -28,18 +28,13 @@
   </div>
 </div>
 <script src="/javascripts/countUp.min.js"></script>
-<script src="/socket.io/socket.io.js"></script>
 <script>
-  var socket = io();
   var current = 0;
   var options = {
     useEasing: true,
     useGrouping: true,
     separator: ','
   };
-  socket.on('up', function(newCounter){
-    var elem = document.querySelector('.counter .number');
-    (new CountUp(elem, current, parseInt(newCounter), 0, 2.5, options)).start();
-    current = newCounter;
-  });
+  var elem = document.querySelector('.counter .number');
+  (new CountUp(elem, current, <%= totalSavedCount %>, 0, 2.5, options)).start();
 </script>
