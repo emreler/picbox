@@ -82,7 +82,8 @@ Dropbox.prototype.isAppInstalled = function (accessToken) {
     json: true,
     headers: {
       Authorization: 'Bearer ' + accessToken
-    }
+    },
+    timeout: 10000
   };
 
   request(options, function (err, response, body) {
@@ -157,7 +158,7 @@ Dropbox.prototype.deleteFile = function (accessToken, path) {
 
 Dropbox.prototype.saveUrlP = function (params) {
   var deferred = Q.defer();
-  // Q.delay(300).then(function () {return deferred.reject('fooer');});
+  // Q.delay(300).then(function () {return deferred.resolve();});
   // return deferred.promise;
   params.retry = params.retry || 0;
 
@@ -167,7 +168,8 @@ Dropbox.prototype.saveUrlP = function (params) {
     json: true,
     headers: {
       Authorization: 'Bearer '+params.accessToken
-    }
+    },
+    timeout: 10000
   };
 
   _this = this;
@@ -203,64 +205,6 @@ Dropbox.prototype.saveUrlP = function (params) {
     }
   });
   return deferred.promise;
-};
-
-Dropbox.prototype.saveUrl = function (params, cb) {
-
-  params.retry = params.retry || 0;
-
-  _this = this;
-  var req = https.request({
-    host: 'api.dropboxapi.com',
-    path: '/1/save_url/auto/' + encodeURIComponent(params.path) + '?' + querystring.stringify({url: params.url}),
-    method: 'POST',
-    headers: {
-      Authorization: 'Bearer '+params.accessToken
-    }
-  }, function (res) {
-    var responseStr = '';
-    res.setEncoding('utf8');
-
-    res.on('data', function (chunk) {
-      responseStr += chunk;
-    });
-
-    res.on('end', function () {
-      /*
-      Sample response:
-      {"status": "PENDING", "job": "1mYs8ReIEScAAAAAAAAmIQ"}
-      */
-      var response = {};
-      try {
-        response = JSON.parse(responseStr);
-      } catch (e) {
-        // todo: show error
-        return cb(e);
-      }
-
-      if (response.hasOwnProperty('error')) {
-        // See: https://www.dropboxforum.com/hc/en-us/community/posts/204555365-Failed-to-grab-locks
-        if (response.error.indexOf('Failed to grab locks') >= 0) {
-          if (++params.retry === _this.maxRetry) {
-            return cb(new Error('Retries failed'));
-          }
-          return setTimeout(function () {
-            _this.saveUrl(params, cb);
-          }, 300 * params.retry);
-        } else {
-          return cb(new Error(response.error));
-        }
-      }
-
-      if (params.retry > 0) {
-        console.log('completed after '+ params.retry + ' retries');
-      }
-
-      cb(null, response);
-    });
-  });
-
-  req.end();
 };
 
 module.exports = Dropbox;

@@ -2,6 +2,7 @@ var querystring = require('querystring');
 var https = require('https');
 var Q = require('q');
 var debug = require('debug')('instagram');
+var request = require('request');
 
 var Instagram = function (config) {
   this.clientID = config.client_id;
@@ -27,46 +28,34 @@ Instagram.prototype.getLikesP = function (accessToken) {
   });
 
   var options = {
-    host: this.apiHost,
-    path: '/v1/users/self/media/liked?'+queryParams
+    url: 'https://api.instagram.com/v1/users/self/media/liked?' + queryParams,
+    method: 'GET',
+    json: true,
+    timeout: 10000
   };
 
-  var req = https.request(options, function (res) {
+  request(options, function (err, res, body) {
+    /*
+    Sample response:
+    {"pagination":{"next_url":"https:\/\/api.instagram.com\/v1\/users\/self\/media\/liked?access_token=foo\u0026count=1\u0026max_like_id=1057321178928673247","next_max_like_id":"1057321178928673247"},"meta":{"code":200},"data":[{"attribution":null,"tags":["3door","classic"],"type":"image","location":null,"comments":{},"filter":"Normal","created_time":"1440262528","link":"https:\/\/instagram.com\/p\/6sXAKjinHf\/","likes":{},"images":{"low_resolution":{"url":"https:\/\/...","width":320,"height":320},"thumbnail":{"url":"https:\/\/...","width":150,"height":150},"standard_resolution":{"url":"https:\/\/...","width":640,"height":640}},"users_in_photo":[],"caption":{"created_time":"1440262528","text":"some text","from":{"username":"american_automobiles","profile_picture":"https:\/\/...","id":"1042330667","full_name":"name"},"id":"1057321182317671120"},"user_has_liked":true,"id":"1057321178928673247_1042330667","user":{"username":"american_automobiles","profile_picture":"https:\/\/...","id":"1042330667","full_name":""}}]}
+    */
 
-    var responseStr = '';
-    res.setEncoding('utf8');
+    if (err) {
+      throw err;
+    }
 
-    res.on('data', function (chunk) {
-      responseStr += chunk;
-    });
-
-    res.on('end', function () {
-      /*
-      Sample response:
-      {"pagination":{"next_url":"https:\/\/api.instagram.com\/v1\/users\/self\/media\/liked?access_token=foo\u0026count=1\u0026max_like_id=1057321178928673247","next_max_like_id":"1057321178928673247"},"meta":{"code":200},"data":[{"attribution":null,"tags":["3door","classic"],"type":"image","location":null,"comments":{},"filter":"Normal","created_time":"1440262528","link":"https:\/\/instagram.com\/p\/6sXAKjinHf\/","likes":{},"images":{"low_resolution":{"url":"https:\/\/...","width":320,"height":320},"thumbnail":{"url":"https:\/\/...","width":150,"height":150},"standard_resolution":{"url":"https:\/\/...","width":640,"height":640}},"users_in_photo":[],"caption":{"created_time":"1440262528","text":"some text","from":{"username":"american_automobiles","profile_picture":"https:\/\/...","id":"1042330667","full_name":"name"},"id":"1057321182317671120"},"user_has_liked":true,"id":"1057321178928673247_1042330667","user":{"username":"american_automobiles","profile_picture":"https:\/\/...","id":"1042330667","full_name":""}}]}
-      */
-      var response = {};
-      try {
-        response = JSON.parse(responseStr);
-      } catch (e) {
-        // todo: show error
-        deferred.reject(e);
-      }
-
-      if (res.statusCode != 200) {
-        if (response.hasOwnProperty('meta') && response.meta.hasOwnProperty('error_message')) {
-          if (response.meta.error_message.indexOf('The access_token provided is invalid') >= 0) {
-            deferred.reject({removeIgmCredentials: true, message: response.meta.error_message});
-          } else {
-            deferred.reject(new Error(response.meta.error_message));
-          }
+    if (res.statusCode != 200) {
+      if (body.hasOwnProperty('meta') && body.meta.hasOwnProperty('error_message')) {
+        if (body.meta.error_message.indexOf('The access_token provided is invalid') >= 0) {
+          deferred.reject({removeIgmCredentials: true, message: body.meta.error_message});
+        } else {
+          deferred.reject(new Error(body.meta.error_message));
         }
       }
-      deferred.resolve(response.data);
-    });
+      deferred.reject(body);
+    }
+    deferred.resolve(body.data);
   });
-
-  req.end();
 
   return deferred.promise;
 };
