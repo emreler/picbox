@@ -36,7 +36,7 @@ storage.getUsers()
   });
 })
 .then(function (users) {
-  users = [users[0]];
+  // users = [users[0]];
   return Q.allSettled(users.map(function (user) {
     user.savedCount = 0;
     return dropbox.isAppInstalled(user.dropbox_token)
