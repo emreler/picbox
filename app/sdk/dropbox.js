@@ -83,7 +83,7 @@ Dropbox.prototype.isAppInstalled = function (accessToken) {
     headers: {
       Authorization: 'Bearer ' + accessToken
     },
-    timeout: 10000
+    timeout: 50000
   };
 
   request(options, function (err, response, body) {
@@ -169,7 +169,7 @@ Dropbox.prototype.saveUrlP = function (params) {
     headers: {
       Authorization: 'Bearer '+params.accessToken
     },
-    timeout: 10000
+    timeout: 50000
   };
 
   _this = this;

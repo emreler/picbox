@@ -31,7 +31,7 @@ Instagram.prototype.getLikesP = function (accessToken) {
     url: 'https://api.instagram.com/v1/users/self/media/liked?' + queryParams,
     method: 'GET',
     json: true,
-    timeout: 10000
+    timeout: 50000
   };
 
   request(options, function (err, res, body) {
