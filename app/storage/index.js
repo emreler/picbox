@@ -11,12 +11,25 @@ var Storage = function (mysqlConfig, redisConfig) {
   this.database = mysqlConfig.database;
 
   // connection is not established here. it is established implicitly by invoking a query
-  this.connection = mysql.createConnection({
-    host: this.host,
-    user: this.user,
-    password: this.password,
-    database: this.database
-  });
+  this.handleDisconnect = function () {
+    this.connection = mysql.createConnection({
+      host: this.host,
+      user: this.user,
+      password: this.password,
+      database: this.database
+    });
+
+    this.connection.on('error', function(err) {
+      console.error('db error', err);
+      if(err.code === 'PROTOCOL_CONNECTION_LOST') { // Connection to the MySQL server is usually
+        this.handleDisconnect();                         // lost due to either server restart, or a
+      } else {                                      // connnection idle timeout (the wait_timeout
+        throw err;                                  // server variable configures this)
+      }
+    });
+  }
+
+  this.handleDisconnect();
 
   this.redisClient = redis.createClient(redisConfig.port, redisConfig.host);
 
