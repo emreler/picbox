@@ -1,0 +1,67 @@
+body {
+  font-family: "Lato", sans-serif;
+  background-image: url("/images/connect.png");
+}
+.promo h1 {
+  font-size: 50px;
+  font-weight: 700;
+}
+.promo h4 {
+  font-weight: 300;
+}
+.promo {
+  text-align: center;
+  margin-top: 50px;
+}
+.header {
+  text-align: center;
+  height: 40px;
+  background-color: black;
+  padding: 10px;
+  color: white;
+  font-weight: 300;
+}
+.header a {
+  color: inherit;
+  text-decoration: inherit;
+}
+.header-main {
+  text-align: center;
+  background-color: black;
+  padding: 10px;
+  color: white;
+  font-weight: 300;
+}
+.header-main h1 {
+  font-weight: 300;
+  font-size: 144px;
+  margin-bottom: 20px;
+}
+.header-main h2 {
+  font-weight: 300;
+  font-size: 24px;
+}
+.header-main h3 {
+  font-weight: 300;
+  font-size: 14px;
+  margin-top: 14px;
+  margin-bottom: 30px;
+  color: #A5A4A4;
+}
+a {
+  color: #00B7FF;
+}
+.login {
+  margin-top: 15px;
+}
+.contact {
+  margin-top: 50px;
+}
+.counter {
+  font-size: 22px;
+  font-weight: 300;
+  margin: 30px;
+}
+.counter .number {
+  font-size: 50px;
+}
